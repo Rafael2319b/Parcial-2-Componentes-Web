@@ -1,121 +1,111 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { PayPalScriptProvider } from '@paypal/react-paypal-js'
+import Header from './components/Header'
+import Hero from './components/Hero'
+import CardGrid from './components/CardGrid'
+import MyCollection from './components/MyCollection'
+import PurchaseModal from './components/PurchaseModal'
+import Toast from './components/Toast'
+import Footer from './components/Footer'
+import { usePokemonCards, usePurchasedCards } from './hooks/usePokemon'
+
+/**
+ * 🔑 Client ID de PayPal Sandbox.
+ * Para pruebas inmediatas se puede usar 'test', pero PayPal recomienda
+ * crear tu propia app sandbox en https://developer.paypal.com/dashboard/applications/sandbox
+ * y reemplazar este valor por tu Client ID real.
+ */
+const PAYPAL_CLIENT_ID = 'ATIHBO70DKmOQ-SO-izQqPHE-D3fGk08flk8LHFBCjHiEiaMl7ErjnRYw9v4NTzw1yo_T-PeupxvKZcK'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { cards, loading, error, reload } = usePokemonCards(30)
+  const { purchased, addPurchase, isPurchased, clearAll } = usePurchasedCards()
+  const [view, setView] = useState('market')
+  const [selectedCard, setSelectedCard] = useState(null)
+  const [toast, setToast] = useState(null)
+
+  const handleCardSelect = (card) => {
+    if (isPurchased(card.id)) return
+    setSelectedCard(card)
+  }
+
+  /* Pago aprobado y validado correctamente */
+  const handlePurchaseSuccess = (card, paypalDetails) => {
+    addPurchase(card)
+    setSelectedCard(null)
+    setToast({
+      type: 'success',
+      message: `¡Felicidades! Has desbloqueado a ${card.name.charAt(0).toUpperCase() + card.name.slice(1)}.`
+    })
+  }
+
+  /* Error o cancelación */
+  const handlePurchaseError = () => {
+    setToast({
+      type: 'error',
+      message: 'El pago no se completó. La carta sigue bloqueada.'
+    })
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <PayPalScriptProvider
+      options={{
+        'client-id': PAYPAL_CLIENT_ID,
+        currency: 'USD',
+        intent: 'capture',
+        components: 'buttons'
+      }}
+    >
+      <div className="relative z-10 min-h-screen flex flex-col">
+        <Header
+          view={view}
+          onViewChange={setView}
+          collectionCount={purchased.length}
+        />
 
-      <div className="ticks"></div>
+        <main className="flex-1 max-w-7xl w-full mx-auto px-6 lg:px-8 py-8 lg:py-12">
+          {view === 'market' && (
+            <>
+              <Hero totalCards={cards.length} ownedCount={purchased.length} />
+              <CardGrid
+                cards={cards}
+                loading={loading}
+                error={error}
+                isPurchased={isPurchased}
+                onCardSelect={handleCardSelect}
+                onReload={reload}
+              />
+            </>
+          )}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {view === 'collection' && (
+            <MyCollection
+              purchased={purchased}
+              onClearAll={clearAll}
+            />
+          )}
+        </main>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <Footer />
+
+        {selectedCard && (
+          <PurchaseModal
+            card={selectedCard}
+            onClose={() => setSelectedCard(null)}
+            onSuccess={handlePurchaseSuccess}
+            onError={handlePurchaseError}
+          />
+        )}
+
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </div>
+    </PayPalScriptProvider>
   )
 }
 
