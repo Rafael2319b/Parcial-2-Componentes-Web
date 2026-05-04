@@ -28,12 +28,10 @@ Antes de ejecutar el proyecto asegúrese de tener instalado:
 
 Extraer el contenido del archivo `.zip` en cualquier carpeta del equipo.
 
-## 2. Entrar al proyecto
+## 2. Entrar a la carpeta del proyecto
 
 ```bash
-cd Parcial-2-Componentes-Web
-code .
-
+cd pokecards-market
 ```
 
 ## 3. Instalar dependencias
@@ -65,13 +63,13 @@ http://localhost:5173
 # Credenciales de prueba PayPal Sandbox
 
 ```txt
-Correo: sb-comprador@personal.example.com
-Contraseña: Sandbox123*
+Correo: sb-cxvwk50967034@business.example.com
+Contraseña: #LjU%1uT
 ```
 
 ```txt
-Correo: sb-vendedor@business.example.com
-Contraseña: Sandbox123*
+Correo: sb-uphdt50802563@personal.example.com
+Contraseña: Tij1/{1k
 ```
 
 ---
