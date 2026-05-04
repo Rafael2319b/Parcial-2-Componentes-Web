@@ -31,7 +31,7 @@ Extraer el contenido del archivo `.zip` en cualquier carpeta del equipo.
 ## 2. Entrar a la carpeta del proyecto
 
 ```bash
-cd pokecards-market
+cd Parcial-2-Componentes-Web-main/pokecards-market
 ```
 
 ## 3. Instalar dependencias
